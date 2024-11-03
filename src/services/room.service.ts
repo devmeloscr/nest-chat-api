@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/database/prisma.service';
-import { CreateRoomBody } from 'src/dtos/create-room-body';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { PrismaService } from '../database/prisma.service';
+import { CreateRoomBody } from '../dtos/create-room-body';
 
 @Injectable()
 export class RoomService {
@@ -14,16 +14,14 @@ export class RoomService {
 
   async createRoom(body: CreateRoomBody) {
     const { name, description } = body;
-    try {
-      return this.prisma.room.create({
-        data: {
-          name,
-          description,
-        },
-      });
-    } catch (error) {
-      console.error('Ocorreu um problema ao tentar criar a sala!', error);
-      throw new Error('Ocorreu um problema ao tentar criar a sala!');
+    if (await this.getRoomByName(name)) {
+      throw new BadRequestException('Já existe uma sala com esse nome!');
     }
+    return this.prisma.room.create({
+      data: {
+        name,
+        description,
+      },
+    });
   }
 }
